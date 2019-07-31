@@ -1,7 +1,7 @@
 {
-	"name": "repo-template",
-	"version": "1.0.0",
-	"description": "Project boilerplate for easily create and share your new cool modules. ♻️ ♻️",
+	"name": "weather-emoji",
+	"version": "0.0.0",
+	"description": "Get the weather with emoji ☀️ 🌈",
 	"main": "lib/index.js",
 	"files": [
 		"lib/"
@@ -23,15 +23,15 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://www.github.com/luctst/repo-template"
+		"url": "https://www.github.com/luctst/weather-emoji"
 	},
 	"keywords": [],
 	"author": "Tostée Lucas <lucas.tostee@gmail.com> (https://www.lucas-tostee.com)",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://www.github.com/luctst/repo-template/issues"
+		"url": "https://www.github.com/luctst/weather-emoji/issues"
 	},
-	"homepage": "https://www.github.com/luctst/repo-template",
+	"homepage": "https://www.github.com/luctst/weather-emoji",
 	"devDependencies": {
 		"ava": "^2.1.0",
 		"eslint": "^6.0.1",
@@ -41,8 +41,5 @@
 		"eslint-plugin-prettier": "^3.1.0",
 		"eslint-watch": "^5.1.2",
 		"prettier": "^1.18.2"
-	},
-	"dependencies": {
-		"replace-in-file": "^4.1.0"
 	}
 }
