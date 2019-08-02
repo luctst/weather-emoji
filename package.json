@@ -14,7 +14,7 @@
 	],
 	"scripts": {
 		"test": "ava --verbose ./test/*.js",
-		"test:watch": "ava --watch --verbose ./test/*.js",
+		"test:watch": "ava --watch --verbose --fail-fast ./test/*.js",
 		"lint": "npx eslint --cache './lib/**/*.js'",
 		"lint:watch": "esw -w --clear --color --cache './lib/**/*.js'",
 		"lint:fix": "npx eslint --fix './lib/**/*.js'",
@@ -34,6 +34,7 @@
 	"homepage": "https://www.github.com/luctst/weather-emoji",
 	"devDependencies": {
 		"ava": "^2.1.0",
+		"dotenv": "^8.0.0",
 		"eslint": "^6.0.1",
 		"eslint-config-airbnb-base": "^13.2.0",
 		"eslint-config-prettier": "^6.0.0",
