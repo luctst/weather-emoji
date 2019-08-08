@@ -6,6 +6,7 @@ node_js:
 os:
 - linux
 - osx
+- windows
 
 cache:
   directories:
@@ -21,3 +22,8 @@ script:
 - npm test
 - npm run lint
 - npm run style
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always
