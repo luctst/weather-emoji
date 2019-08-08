@@ -1,36 +1,62 @@
+/**
+ * We use puppeteer to simulate a chronium instance because our module will be runnning in the browser. With that we can now easily test our module with ava in a nodejs process.
+ *
+ * Because our module will run in the browser we need to use the ecmascript module with `export`, but NodeJs doesn't support for now this syntax so we use the `esm` package to transpile our `import WeatherEmoji ..` which import our module. into CommonJs syntax for nodejs to understand.
+ *
+ * So we indicate to ava which is our test runners to run some module before executing tests (see `ava.require` array in package.json file) so the `esm` package is runnning and read and parse our `package.main` file but return an error because we're using the `window.fetch` method, which is normal because `esm` is running in nodejs so the `fetch` method is undefined.
+ * One solution is to use the `node-fetch` module who copies the features of window.fetch, so once downloaded we're using the `_require` file to import and attribute the value of `global.fetch` to the `node-fetch` package.
+ */
+
 require("dotenv").config({debug: process.env.DEBUG});
 import test from "ava";
-import {promisify} from "util";
-import {get, createServer} from "http";
+import puppeteer from "puppeteer";
 import WeatherEmoji from "../lib/index";
-let server;
+let browser;
+let page;
 
-test.before("Launch server", t => {
-	server = createServer().on('request', (req, res) => {
-		const testWeather = new WeatherEmoji(process.env.APIKEY);
-		res.setHeader("Content-application", "test/json");
+test.before("Launch the chronium instance", async t => {
+	browser = await puppeteer.launch();
+	page = await browser.newPage();
 
-		res.end(JSON.stringify(testWeather));
-	}).listen(8000);
+	page.on("console", async msg => {
+		if (msg.text() === "JSHandle@object") {
+			t.log(await msg.args()[0].jsonValue());
+		} else {
+			t.log(msg);
+		}
+	});
 });
 
-test("Simulate request on localhost:8000 to test weatherEmoji", async t => {
-	get[promisify.custom] = options => {
-		return new Promise((resolve, reject) => {
-			get(options, result => {
-				result.end = new Promise(resolve => result.on("end", resolve));
-				resolve(result);
-			}).on("error", reject);
+test("Check if getWeather() always return an object", async t => {
+	const weatherEmoji = new WeatherEmoji(process.env.APIKEY);
+	const testResolve = weatherEmoji.getWeather("paris", true).then(data => data);
+	const testReject = weatherEmoji.getWeather("libourne", false).then(data => data);
+
+	return Promise.all([testResolve, testReject]).then(values => {
+		if (typeof testResolve === "object" && typeof testReject === "object") {
+			t.pass("getWeather return an object when resolve and reject.");
+		}
+	})
+});
+
+test("Test in browser, check if object returned is correct", async t => {
+	await page.exposeFunction("weatherEmojiTest", async apiKey => {
+		const weatherEmoji = new WeatherEmoji(apiKey);
+		return weatherEmoji.getWeather("lk", true);
+	});
+	let result = await page.evaluate(apiKey => {
+		return window.weatherEmojiTest(apiKey);
+	}, process.env.APIKEY);
+
+	if (result.code === 200) {
+	} else {
+		t.is(result, {
+			code: 404,
+			message: ""
 		})
 	}
-
-	const getPromise = promisify(get);
-	const test = await getPromise("http://localhost:8000");
-	test.on("data", d => t.log(d.toString()));
-	await test.end;
-	t.pass();
 });
 
-test.after("Stop server", async t => {
-	await server.close();
+test.after("Close the chronium instance", async t => {
+	await browser.close();
 })
