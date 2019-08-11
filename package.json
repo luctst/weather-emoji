@@ -10,7 +10,8 @@
 		"node": ">= 10.0.0"
 	},
 	"eslintIgnore": [
-		"./lib/build/"
+		"./lib/build/",
+		"./lib/utils/"
 	],
 	"ava": {
 		"cache": true,
@@ -21,7 +22,7 @@
 	},
 	"scripts": {
 		"test": "ava --verbose ./test/*.js",
-		"test:watch": "ava --watch --verbose --fail-fast ./test/*.js",
+		"test:watch": "ava --watch --verbose ./test/*.js",
 		"lint": "npx eslint --cache './lib/**/*.js'",
 		"lint:watch": "esw -w --clear --color --cache './lib/**/*.js'",
 		"lint:fix": "npx eslint --fix './lib/**/*.js'",
