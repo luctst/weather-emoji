@@ -1,6 +1,6 @@
 {
 	"name": "weather-emoji",
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"description": "Get the weather with emoji ☀️ 🌈",
 	"main": "lib/index.js",
 	"files": [
@@ -33,7 +33,14 @@
 		"type": "git",
 		"url": "https://www.github.com/luctst/weather-emoji"
 	},
-	"keywords": [],
+	"keywords": [
+		"fetch",
+		"api",
+		"weather",
+		"emoji",
+		"nodejs",
+		"es6"
+	],
 	"author": "Tostée Lucas <lucas.tostee@gmail.com> (https://www.lucas-tostee.com)",
 	"license": "MIT",
 	"bugs": {
