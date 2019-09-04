@@ -29,25 +29,21 @@ test.before("Launch the chronium instance", async t => {
 
 test("Check if getWeather() always return an object", async t => {
 	const weatherEmoji = new WeatherEmoji(process.env.APIKEY);
-	const testResolve = weatherEmoji.getWeather("paris", true).then(data => data);
-	const testReject = weatherEmoji.getWeather("bordeaux", false).then(data => data);
+	const testResolve = await weatherEmoji.getWeather("paris");
+	const testReject = await weatherEmoji.getWeather("bordeaux", false);
+	const isPlainObject = obj => Object.prototype.toString.call(obj) === '[object Object]';
 
-	return Promise.all([testResolve, testReject.catch(err => err)]).then(values => {
-		values.map(el => {
-			if (typeof el !== "object") {
-				t.log(el);
-				return t.fail(`${el} is not an object`);
-			}
-		});
-
+	if (isPlainObject(testResolve) && isPlainObject(testReject)) {
 		return t.pass("getWeather return an object when resolve and reject.");
-	})
+	}
+
+	return t.fail();
 });
 
 test("Test in browser, when error check if return a TypeError object", async t => {
 	await page.exposeFunction("weatherEmojiTest", async apiKey => {
 		const weatherEmoji = new WeatherEmoji(apiKey);
-		return await t.throwsAsync(weatherEmoji.getWeather("", true));
+		return await t.throwsAsync(weatherEmoji.getWeather(""));
 	});
 
 	const result = await page.evaluate(apiKey => window.weatherEmojiTest(apiKey), process.env.APIKEY);
@@ -64,6 +60,8 @@ test("getEmoji return emoji", async t => {
 	const emoji = await page.evaluate(apiKey => window.getEmoji(apiKey), process.env.APIKEY);
 	typeof emoji === "string" ? t.pass("getEmoji method return an emoji string") : t.fail();
 });
+
+test.todo("Check with assertDeepEqual method if weatherEmoji return good object.");
 
 test.after("Close the chronium instance", async t => {
 	await browser.close();
