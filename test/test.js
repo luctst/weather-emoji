@@ -40,28 +40,45 @@ test("Check if getWeather() always return an object", async t => {
 	return t.fail();
 });
 
-test("Test in browser, when error check if return a TypeError object", async t => {
+test("Test in browser, check if return an error when city is not found or incorrect", async t => {
 	await page.exposeFunction("weatherEmojiTest", async apiKey => {
 		const weatherEmoji = new WeatherEmoji(apiKey);
-		return await t.throwsAsync(weatherEmoji.getWeather(""));
+		// Use throwsAsync fn here because the test will not pass because the fn return promise.reject().
+		return await t.throwsAsync(async () => {
+			return await weatherEmoji.getWeather("fkgjdflgj")
+		}, {
+			instanceOf: TypeError
+		});
 	});
 
-	const result = await page.evaluate(apiKey => window.weatherEmojiTest(apiKey), process.env.APIKEY);
-
-	result.code === 200 ? t.fail("Shouldn't return a valid object") : t.pass();
+	await page.evaluate(apiKey => window.weatherEmojiTest(apiKey), process.env.APIKEY);
 });
 
-test("getEmoji return emoji", async t => {
+test.skip("Check if weatherEmoji return a good format object.", async t => {
+	const expected = [
+		{propsName: "code", type: "number"},
+		{propsName: "details", type: "string"},
+		{propsName: "emoji", type: "string"},
+		{propsName: "temperature", type: "object"},
+		{propsName: "actual", type: "number"},
+		{propsName: "max", type: "number"},
+		{propsName: "min", type: "number"},
+		{propsName: "location", type: "string"}
+	];
+
 	await page.exposeFunction("getEmoji", apiKey => {
-		const weatherEmoji = new WeatherEmoji(apiKey);
-		return weatherEmoji._getEmoji("01n");
+		return new WeatherEmoji(apiKey).getWeather("paris");
 	})
 
-	const emoji = await page.evaluate(apiKey => window.getEmoji(apiKey), process.env.APIKEY);
-	typeof emoji === "string" ? t.pass("getEmoji method return an emoji string") : t.fail();
-});
+	const response = await page.evaluate(apiKey => window.getEmoji(apiKey), process.env.APIKEY);
 
-test.todo("Check with assertDeepEqual method if weatherEmoji return good object.");
+	expected.forEach(item => {
+		if (!response[item.propsName]) {
+			t.fail(`The ${item.propsName} is not defined`);
+			console.log(response[item.propsName]);
+		}
+	});
+});
 
 test.after("Close the chronium instance", async t => {
 	await browser.close();
