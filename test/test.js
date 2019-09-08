@@ -13,10 +13,14 @@ import puppeteer from "puppeteer";
 import WeatherEmoji from "../lib/index";
 let browser;
 let page;
+const isPlainObject = obj => Object.prototype.toString.call(obj) === '[object Object]';
 
 test.before("Launch the chronium instance", async t => {
 	browser = await puppeteer.launch();
 	page = await browser.newPage();
+	await page.exposeFunction("weatherEmojiTest", async (apiKey, city) => {
+		return new WeatherEmoji(apiKey).getWeather(city);
+	});
 
 	page.on("console", async msg => {
 		if (msg.text() === "JSHandle@object") {
@@ -28,56 +32,69 @@ test.before("Launch the chronium instance", async t => {
 });
 
 test("Check if getWeather() always return an object", async t => {
-	const weatherEmoji = new WeatherEmoji(process.env.APIKEY);
-	const testResolve = await weatherEmoji.getWeather("paris");
-	const testReject = await weatherEmoji.getWeather("bordeaux", false);
-	const isPlainObject = obj => Object.prototype.toString.call(obj) === '[object Object]';
+	const testOne = await page.evaluate((apiKey, city) => window.weatherEmojiTest(apiKey, city), process.env.APIKEY, "paris");
+	const testTwo = await page.evaluate((apiKey, city) => window.weatherEmojiTest(apiKey, city), process.env.APIKEY, "bordeaux");
 
-	if (isPlainObject(testResolve) && isPlainObject(testReject)) {
-		return t.pass("getWeather return an object when resolve and reject.");
+	if (isPlainObject(testOne) && isPlainObject(testTwo)) {
+		return t.pass();
 	}
 
 	return t.fail();
 });
 
-test("Test in browser, check if return an error when city is not found or incorrect", async t => {
-	await page.exposeFunction("weatherEmojiTest", async apiKey => {
+test("Check if return an error when city is not found or incorrect", async t => {
+	await page.exposeFunction("testError", async apiKey => {
 		const weatherEmoji = new WeatherEmoji(apiKey);
 		// Use throwsAsync fn here because the test will not pass because the fn return promise.reject().
 		return await t.throwsAsync(async () => {
-			return await weatherEmoji.getWeather("fkgjdflgj")
+			return await weatherEmoji.getWeather("fkgjdflgj");
 		}, {
 			instanceOf: TypeError
 		});
 	});
 
-	await page.evaluate(apiKey => window.weatherEmojiTest(apiKey), process.env.APIKEY);
+	await page.evaluate(apiKey => window.testError(apiKey), process.env.APIKEY);
 });
 
-test.skip("Check if weatherEmoji return a good format object.", async t => {
-	const expected = [
-		{propsName: "code", type: "number"},
-		{propsName: "details", type: "string"},
-		{propsName: "emoji", type: "string"},
-		{propsName: "temperature", type: "object"},
-		{propsName: "actual", type: "number"},
-		{propsName: "max", type: "number"},
-		{propsName: "min", type: "number"},
-		{propsName: "location", type: "string"}
-	];
+test("Check if weatherEmoji return a good format object.", async t => {
+	const expected = {
+		code: 0,
+		details: "",
+		emoji: "",
+		temperature: {
+			actual: 0,
+			max: 0,
+			min: 0
+		},
+		location: ""
+	};
+	const response = await page.evaluate((apiKey, city) => {
+		return window.weatherEmojiTest(apiKey, city)
+	}, process.env.APIKEY, "paris");
 
-	await page.exposeFunction("getEmoji", apiKey => {
-		return new WeatherEmoji(apiKey).getWeather("paris");
-	})
+	Object.keys(response).map(item => {
+		if (typeof response[item] === "object") {
+			if (isPlainObject(response[item])) {
+				Object.keys(response[item]).map(element => {
+					if (typeof response[item][element] !== typeof expected[item][element]) {
+						t.fail();
+					}
+				});
+			}
 
-	const response = await page.evaluate(apiKey => window.getEmoji(apiKey), process.env.APIKEY);
+			if (!isPlainObject(response[item])) {
+				response[item].map(element => {
+					typeof element !== expected[item][element] && t.fail()
+				});
+			}
+		}
 
-	expected.forEach(item => {
-		if (!response[item.propsName]) {
-			t.fail(`The ${item.propsName} is not defined`);
-			console.log(response[item.propsName]);
+		if (typeof response[item] !== typeof expected[item]) {
+			t.fail()
 		}
 	});
+
+	return t.pass();
 });
 
 test.after("Close the chronium instance", async t => {
