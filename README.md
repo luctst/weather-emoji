@@ -39,7 +39,7 @@ Return an object with methods and properties below:
 This method fetch data about a city and return data and emoji about this city.
 
 * `cityName` {string} - The city name to retrieve data.
-* `celsius` {boolean} - If true the temperature will be in celsius format either in farenheit.
+* `celsius` {boolean} default *true* - If false the temperature will be in farenheit.
 
 Return a Promise which resolve if the `cityName` argument is correct.
 * `code` {number} Result status code.
