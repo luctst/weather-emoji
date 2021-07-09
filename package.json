@@ -1,6 +1,6 @@
 {
 	"name": "weather-emoji",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "Get the weather with emoji ☀️ 🌈",
 	"main": "lib/index.js",
 	"files": [
